@@ -1,0 +1,38 @@
+<?php
+/*
+Plugin Name: Allowed Plugin Filter - Optimizer
+Description: Load only specific plugins for a specific action, to optimize resource usage and increase scalability. Originally developed for VideoWhisper turnkey site solutions to optimize resource usage during AJAX chat requests. <a href='https://consult.videowhisper.com/?topic=APF+Optimizer'>Contact Support</a>
+Version: 1.1.1
+Author: VideoWhisper.com
+Author URI: https://videowhisper.com/
+Contributors: videowhisper
+Requires PHP: 7.4
+License: GPLv2 or later
+License URI: https://www.gnu.org/licenses/gpl-2.0.html
+*/
+
+define('VIDEOWHISPER_APF_VERSION', '2023.08.27c');
+
+// Only run the functionality for admin AJAX requests.
+if ( defined('DOING_AJAX') && DOING_AJAX && isset($_GET['action']) ) {
+
+    $action = sanitize_text_field( $_GET['action'] );
+    $optionsAPF = get_option( 'videowhisper_apf_ajax' );
+
+    if ($optionsAPF) if ( isset($optionsAPF[$action]) ) 
+    {
+
+    $allowed_plugins = [];
+    foreach ($optionsAPF[$action] as $plugin) 
+    if (strstr($plugin, '.php')) $allowed_plugins[] = $plugin; //complete path
+    else $allowed_plugins[] = "$plugin/$plugin.php"; //just plugin folder
+
+    if (count($allowed_plugins))
+    add_filter('option_active_plugins', function($plugins) use ($allowed_plugins) {
+        return array_intersect($plugins, $allowed_plugins);
+    });
+
+    }
+
+
+}
